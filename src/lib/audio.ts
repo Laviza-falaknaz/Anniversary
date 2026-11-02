@@ -63,3 +63,15 @@ export function startAmbient() {
 export function stopAmbient() {
   if (ambientTimer !== null) { window.clearInterval(ambientTimer); ambientTimer = null }
 }
+
+/** Ambient music is ON by default, but browsers (and our own rule) forbid sound before a
+ *  user gesture, so it begins on the first tap, click or key press, and only if still enabled. */
+export function armAmbientOnFirstGesture() {
+  const go = () => {
+    window.removeEventListener('pointerdown', go)
+    window.removeEventListener('keydown', go)
+    if (getPrefs().ambient) startAmbient()
+  }
+  window.addEventListener('pointerdown', go, { once: true })
+  window.addEventListener('keydown', go, { once: true })
+}

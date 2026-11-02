@@ -12,6 +12,7 @@ import { Activity } from './pages/Activity'
 import { ErrorBox, Spinner } from './components/ui'
 import { useEffect } from 'react'
 import { applyCalm } from './lib/prefs'
+import { armAmbientOnFirstGesture } from './lib/audio'
 
 function Routes() {
   const route = useRoute()
@@ -40,7 +41,7 @@ function Routes() {
 
 function Inner() {
   const { authed, who } = useSession()
-  useEffect(() => { applyCalm() }, [])
+  useEffect(() => { applyCalm(); armAmbientOnFirstGesture() }, [])
   if (!authed || !who) return <Gate />
   return (
     <DataProvider>

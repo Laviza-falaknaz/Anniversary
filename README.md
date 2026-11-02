@@ -12,6 +12,7 @@ A romantic, interactive site for Laviza and Ahmed (2 November 2026). Letters unl
 - Letter text is stored in the database and released by the **database clock** only once `unlock_at` has passed. The text is not in the JavaScript bundle. Opening or reacting to a locked letter is refused by SQL.
 - Activity timestamps are server-generated. Writes are idempotent (unique keys / client request ids).
 - Private recipient-only notes are **intentionally omitted**: with a shared password, "private" would be fake privacy.
+- Ambient music is on by default but only starts after the first tap/click (browsers block earlier); it can be switched off in Settings (gear icon).
 - The session token is kept in `localStorage` (so Ahmed can come back during the day). Sound/motion preferences are too. No shared data is stored there.
 
 ## Project layout

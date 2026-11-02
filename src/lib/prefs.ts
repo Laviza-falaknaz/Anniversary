@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react'
 // Non-sensitive UI preferences only (sound, calm motion). Never used for shared data.
 export interface Prefs { sfx: boolean; ambient: boolean; calm: boolean }
 const KEY = 'anniv.prefs'
-const defaults: Prefs = { sfx: true, ambient: false, calm: false }
+const defaults: Prefs = { sfx: true, ambient: true, calm: false }
 
 function load(): Prefs {
   try { return { ...defaults, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') } } catch { return defaults }
