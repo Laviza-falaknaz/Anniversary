@@ -1,6 +1,6 @@
 // Request handling for the `anniv` Edge Function. Pure with respect to its
 // dependencies (database RPC, env, clock) so it runs unchanged in Deno and in tests.
-import { hmacHex, safeEqual, signToken, verifyToken, type Claims } from '../_shared/jwt.ts'
+import { hmacHex, safeEqual, signToken, verifyToken, type Claims } from './jwt.ts'
 
 export interface Deps {
   /** Calls a Postgres function through the service role. */
@@ -12,8 +12,6 @@ export interface Deps {
     ALLOWED_ORIGIN?: string
   }
   now: () => number
-  /** Best-effort "something changed" ping for Supabase Realtime. Carries no data. */
-  notify?: () => Promise<void>
 }
 
 class HttpError extends Error {
@@ -45,10 +43,6 @@ const DB_ERRORS: Record<string, number> = {
   no_rewards: 500,
 }
 
-const WRITE_ACTIONS = new Set([
-  'open_letter', 'react', 'post_note', 'mark_seen', 'spin', 'resolve_spin', 'add_wish', 'update_wish',
-  'submit_quiz', 'log_event', 'set_preference', 'propose_plan', 'confirm_plan',
-])
 
 function cors(env: Deps['env']): Record<string, string> {
   return {
@@ -231,9 +225,6 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
         throw new HttpError(400, 'unknown_action')
     }
 
-    if (WRITE_ACTIONS.has(action) && deps.notify) {
-      try { await deps.notify() } catch { /* realtime is best-effort; clients also poll */ }
-    }
     return json({ ok: true, data: result }, 200, env)
   } catch (e) {
     if (e instanceof HttpError) return json({ error: e.code, ...e.extra }, e.status, env)

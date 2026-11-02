@@ -17,7 +17,7 @@ const NAV = [
 
 export function Shell({ children }: { children: ReactNode }) {
   const route = useRoute()
-  const { who, unreadNotes, newActivity, live, error, refresh } = useData()
+  const { who, unreadNotes, newActivity, error, refresh } = useData()
   const { logout, switchPerson } = useSession()
   const [menu, setMenu] = useState(false)
   const prefs = usePrefs()
@@ -69,7 +69,7 @@ export function Shell({ children }: { children: ReactNode }) {
                   <button className="btn btn-ghost btn-sm" onClick={() => logout()}>Log out</button>
                 </div>
               </div>
-              <p className="pt-1 text-xs text-chocolate/60">{live ? '● Live updates on' : '○ Refreshing every few seconds'}</p>
+              <p className="pt-1 text-xs text-chocolate/60">Updates arrive within a few seconds.</p>
             </div>
           </div>
         )}

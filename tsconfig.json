@@ -15,5 +15,5 @@
     "isolatedModules": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "tests", "scripts", "supabase/functions/_shared", "supabase/functions/anniv/handler.ts"]
+  "include": ["src", "tests", "scripts", "supabase/functions/anniv/handler.ts", "supabase/functions/anniv/jwt.ts"]
 }

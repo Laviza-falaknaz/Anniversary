@@ -2,7 +2,7 @@
 
 A romantic, interactive site for Laviza and Ahmed (2 November 2026). Letters unlock through the day, there is a gift wheel, a quiz, notes, a wish jar, and a shared date-night planner. Laviza can open the same site to see Ahmed's activity.
 
-**Stack:** React + TypeScript + Vite + Tailwind (static, GitHub Pages) · Supabase Postgres (relational tables + RLS) · one Supabase Edge Function (`anniv`) for the password, sessions and all writes · Supabase Realtime pings with polling fallback.
+**Stack:** React + TypeScript + Vite + Tailwind (static, GitHub Pages) · Supabase Postgres (relational tables + RLS) · one Supabase Edge Function (`anniv`) for the password, sessions and all writes · updates arrive by polling every 10 s (no public Realtime channel is used).
 
 ## How it works (and what it does not do)
 
@@ -45,7 +45,6 @@ tests/                  ← unit, SQL and API tests
    Optional: `ALLOWED_ORIGIN=https://laviza-falaknaz.github.io` (locks CORS to your site), `SESSION_TTL_HOURS=24`.
    `APP_PASSWORD` accepts several comma-separated values (e.g. `"spellingOne,spellingTwo"`). Your brief spelled the cat as *Livikzi* but the password differently, so consider accepting both spellings.
 6. Deploy the function: `supabase functions deploy anniv --no-verify-jwt` (it uses its own signed tokens).
-7. Realtime (optional, makes updates instant): Dashboard → Realtime → Settings → allow public access to broadcast channels. If you skip it, pages refresh themselves every 20 s and on tab focus.
 
 ### 2. GitHub Pages (frontend)
 
@@ -85,6 +84,6 @@ npm run build
 
 - Identity is self-reported (see above). Anyone with the password can pick either name.
 - The wheel's randomness is Postgres `random()`: fair for a game, not cryptographic.
-- The Edge Function and Realtime could not be exercised against a live Supabase project in the build environment; they are covered by tests against Postgres and the handler, but do a quick manual run-through after deploying.
+- Realtime is deliberately not used (a secure private channel would need Supabase Auth users, which this design avoids); updates take up to ~10 s. The Edge Function could not be exercised against a live Supabase project in the build environment; they are covered by tests against Postgres and the handler, but do a quick manual run-through after deploying.
 - Quiz scores are computed in the browser (low stakes; the server only bounds-checks them).
 - "Open when…" and adventure text ships in the public page (not time-locked).

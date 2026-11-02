@@ -18,8 +18,8 @@ export const SITE = {
   petName: 'Livikzi',
   /** Show small "placeholder" badges on content you still need to personalise. Set to false once done. */
   showPlaceholderBadges: true,
-  /** How often the app re-checks the server (seconds) as a fallback to Realtime. */
-  pollSeconds: 20,
+  /** How often the app re-checks the server (seconds). Updates are pulled by polling; no public Realtime channel is used. */
+  pollSeconds: 10,
 }
 
 export const other = (w: Who): Who => (w === 'laviza' ? 'ahmed' : 'laviza')

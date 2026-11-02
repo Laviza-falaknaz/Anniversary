@@ -1,7 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { RealtimeClient } from '@supabase/realtime-js'
 import { api, ApiError } from './api'
-import { CONFIG } from './config'
 import { SITE, other, type Who } from '../content/site'
 import type { SyncData } from './types'
 import { useSession } from './session'
@@ -12,7 +10,6 @@ interface Ctx {
   status: Status
   error: string | null
   who: Who
-  live: boolean // realtime connected
   now: () => number // server-synchronised clock (ms)
   refresh: () => Promise<void>
   act: <T = unknown>(action: string, payload?: Record<string, unknown>) => Promise<T>
@@ -28,7 +25,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<SyncData | null>(null)
   const [status, setStatus] = useState<Status>('loading')
   const [error, setError] = useState<string | null>(null)
-  const [live, setLive] = useState(false)
   const offset = useRef(0)
   const inflight = useRef<Promise<void> | null>(null)
   const dirty = useRef(false)
@@ -70,23 +66,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [refresh])
 
-  // Supabase Realtime: the server broadcasts an empty "changed" ping; we re-fetch through the authenticated API.
-  useEffect(() => {
-    if (!CONFIG.configured || CONFIG.supabaseUrl.startsWith('http://')) return // local mock has no Realtime
-    let timer: number | undefined
-    let client: RealtimeClient | null = null
-    try {
-      client = new RealtimeClient(`${CONFIG.supabaseUrl.replace(/^http/, 'ws')}/realtime/v1`, { params: { apikey: CONFIG.anonKey } })
-      const ch = client.channel('anniv')
-      ch.on('broadcast', { event: 'changed' }, () => {
-        window.clearTimeout(timer)
-        timer = window.setTimeout(() => void refresh(), 250)
-      }).subscribe((s: string) => setLive(s === 'SUBSCRIBED'))
-      client.connect()
-    } catch { setLive(false) }
-    return () => { window.clearTimeout(timer); try { client?.disconnect() } catch { /* ignore */ } }
-  }, [refresh])
-
   // Letters unlock automatically: re-sync exactly when the next locked letter's time arrives.
   useEffect(() => {
     if (!data) return
@@ -118,8 +97,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return data.activity.filter((a) => a.participant === other(who) && Date.parse(a.created_at) > seen).length
   }, [data, who])
 
-  const value = useMemo<Ctx>(() => ({ data, status, error, who, live, now, refresh, act, unreadNotes, newActivity, markSeen }),
-    [data, status, error, who, live, now, refresh, act, unreadNotes, newActivity, markSeen])
+  const value = useMemo<Ctx>(() => ({ data, status, error, who, now, refresh, act, unreadNotes, newActivity, markSeen }),
+    [data, status, error, who, now, refresh, act, unreadNotes, newActivity, markSeen])
   return <DataCtx.Provider value={value}>{children}</DataCtx.Provider>
 }
 

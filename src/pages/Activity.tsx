@@ -37,7 +37,7 @@ function describe(e: ActivityRow): { icon: string; verb: string; quote?: string 
 }
 
 export function Activity() {
-  const { data, who, markSeen, refresh, error, live } = useData()
+  const { data, who, markSeen, refresh, error } = useData()
   const [filter, setFilter] = useState<Filter>('all')
   const [person, setPerson] = useState<Who | 'all'>(other(who))
   const seenAtEntry = useRef<number | null>(null)
@@ -69,7 +69,7 @@ export function Activity() {
         <span><strong className="serif text-2xl text-espresso">{s.letters}</strong> / {data.letters.length} letters opened</span>
         <span><strong className="serif text-2xl text-espresso">{s.notes}</strong> notes</span>
         <span><strong className="serif text-2xl text-espresso">{s.badges}</strong> badges</span>
-        <span className="ml-auto text-xs">{live ? '● live' : '○ refreshes every few seconds'}</span>
+        <span className="ml-auto text-xs">refreshes every few seconds</span>
       </div>
 
       <div className="space-y-3">

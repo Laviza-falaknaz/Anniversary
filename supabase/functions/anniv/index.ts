@@ -15,20 +15,9 @@ async function rpc(fn: string, args: Record<string, unknown>) {
   return data
 }
 
-// Tells connected clients "something changed" over Realtime broadcast. The payload is
-// empty: clients then re-fetch through the authenticated API, so nothing leaks.
-async function notify() {
-  await fetch(`${url}/realtime/v1/api/broadcast`, {
-    method: 'POST',
-    headers: { apikey: serviceKey, authorization: `Bearer ${serviceKey}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ messages: [{ topic: 'anniv', event: 'changed', payload: {}, private: false }] }),
-  })
-}
-
 Deno.serve((req: Request) =>
   handle(req, {
     rpc,
-    notify,
     now: () => Date.now(),
     env: {
       APP_PASSWORD: Deno.env.get('APP_PASSWORD'),

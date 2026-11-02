@@ -1,19 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { PGlite } from '@electric-sql/pglite'
 import { handle, type Deps } from '../supabase/functions/anniv/handler'
-import { signToken, verifyToken } from '../supabase/functions/_shared/jwt'
+import { signToken, verifyToken } from '../supabase/functions/anniv/jwt'
 import { freshDb, letterId, rpc as dbRpc, shiftLetter, uid } from './helpers/db'
 
 const SECRET = 'test-secret-test-secret-1234567890'
 let db: PGlite
 let clock = Date.parse('2026-11-02T06:00:00Z')
-let notified = 0
 
 const deps = (over: Partial<Deps['env']> = {}): Deps => ({
   rpc: (fn, args) => dbRpc(db, fn, args),
   env: { APP_PASSWORD: 'dev-password', SESSION_SECRET: SECRET, ...over },
   now: () => clock,
-  notify: async () => { notified++ },
 })
 
 async function call(body: unknown, token?: string, env: Partial<Deps['env']> = {}, ip = '1.2.3.4') {
@@ -34,7 +32,7 @@ async function session(who: 'laviza' | 'ahmed' = 'ahmed') {
   return id.json.token as string
 }
 
-beforeEach(async () => { db = await freshDb(); clock = Date.parse('2026-11-02T06:00:00Z'); notified = 0 })
+beforeEach(async () => { db = await freshDb(); clock = Date.parse('2026-11-02T06:00:00Z') })
 
 describe('password gate (server-side)', () => {
   it('accepts the right password (case/whitespace-insensitive) and returns an expiring token', async () => {
@@ -149,14 +147,11 @@ describe('protected operations through the API', () => {
     expect((await call({ action: 'post_note', body: 'a\u0000b', clientRequestId: uid() }, t)).status).toBe(400)
     expect((await call({ action: 'drop_tables' }, t)).status).toBe(400)
   })
-  it('post_note is idempotent through the API and notifies realtime on writes only', async () => {
+  it('post_note is idempotent through the API', async () => {
     const t = await session(); const req = uid()
     await call({ action: 'post_note', body: 'hello', clientRequestId: req }, t)
     await call({ action: 'post_note', body: 'hello', clientRequestId: req }, t)
     expect((await db.query('select 1 from anniversary_notes')).rows).toHaveLength(1)
-    const before = notified
-    await call({ action: 'sync' }, t)
-    expect(notified).toBe(before)
   })
   it('end-to-end: spin → pending → claim → spin again; planner proposal → partner confirms', async () => {
     const ahmed = await session('ahmed'); const laviza = await session('laviza')
