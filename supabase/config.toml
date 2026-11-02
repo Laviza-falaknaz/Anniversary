@@ -1,0 +1,6 @@
+project_id = "anniversary"
+
+[functions.anniv]
+# Requests are authenticated by our own signed session token (see handler.ts),
+# not by a Supabase user JWT, so gateway JWT verification is switched off.
+verify_jwt = false
