@@ -27,9 +27,9 @@ jobs:
       - run: npm test
       - run: npm run build
         env:
-          # PUBLIC values only. Set them under Settings → Secrets and variables → Actions → *Variables*.
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          # PUBLIC values only (URL + publishable key). Repository variables override these defaults.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://zzvohttzfeikhkdkvphw.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || 'sb_publishable_Dx4oVYidfnf1CkCn0Rdkaw_t1c7mnpY' }}
           VITE_BASE: /${{ github.event.repository.name }}/
       - run: cp dist/index.html dist/404.html   # deep-link refreshes fall back to the app
       - uses: actions/upload-pages-artifact@v3
