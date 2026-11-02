@@ -64,11 +64,15 @@ export function Rich({ text }: { text: string }) {
 
 export function Modal({ open, onClose, label, children, wide }: { open: boolean; onClose: () => void; label: string; children: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
+  // Keep the latest onClose without re-running the effect: re-running it on every render
+  // used to steal focus from the textarea (collapsing the mobile keyboard) on each refresh.
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
   useEffect(() => {
     if (!open) return
     const prev = document.activeElement as HTMLElement | null
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') closeRef.current()
       if (e.key === 'Tab' && ref.current) {
         const f = ref.current.querySelectorAll<HTMLElement>('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])')
         if (!f.length) return
@@ -79,9 +83,9 @@ export function Modal({ open, onClose, label, children, wide }: { open: boolean;
     }
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
-    ref.current?.focus()
+    if (ref.current && !ref.current.contains(document.activeElement)) ref.current.focus()
     return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; prev?.focus?.() }
-  }, [open, onClose])
+  }, [open])
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-espresso/70 backdrop-blur-sm sm:items-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>

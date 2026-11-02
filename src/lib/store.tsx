@@ -28,6 +28,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const offset = useRef(0)
   const inflight = useRef<Promise<void> | null>(null)
   const dirty = useRef(false)
+  const lastSig = useRef('')
 
   const refresh = useCallback((): Promise<void> => {
     if (inflight.current) { dirty.current = true; return inflight.current }
@@ -35,7 +36,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       try {
         const d = await api.call<SyncData>('sync')
         offset.current = Date.parse(d.now) - Date.now() // trust the server clock, not the device clock
-        setData(d); setStatus('ready'); setError(null)
+        // Only replace state when something actually changed, so idle polling never re-renders (or steals focus from) a text box.
+        const sig = JSON.stringify({ ...d, now: 0 })
+        if (sig !== lastSig.current) { lastSig.current = sig; setData(d) }
+        setStatus('ready'); setError(null)
       } catch (e) {
         if (e instanceof ApiError && e.isAuth) return // session handler takes over
         setError(e instanceof ApiError && e.code === 'network' ? 'network' : 'server')
