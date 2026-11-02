@@ -117,8 +117,8 @@ function WhoPicker({ onPick }: { onPick: (w: Who) => Promise<void> }) {
         <p className="mx-auto mt-3 max-w-md text-chocolate/80">This is how your letters, notes and choices are signed. It's a simple pick (no accounts), so it works on the honour system.</p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 stagger">
           {(['ahmed', 'laviza'] as Who[]).map((w) => (
-            <button key={w} onClick={() => pick(w)} disabled={busy !== null}
-              className="card group p-8 text-left transition hover:-translate-y-1 hover:shadow-2xl disabled:opacity-60">
+            <button key={w} onClick={() => pick(w)} disabled={busy !== null} autoFocus={w === 'ahmed'}
+              className={`card group p-8 text-left transition hover:-translate-y-1 hover:shadow-2xl disabled:opacity-60 ${w === 'ahmed' ? 'ring-2 ring-gold sm:scale-105' : 'opacity-90'}`}>
               <span className="script text-3xl" style={{ color: SITE.people[w].color }}>{w === 'ahmed' ? "I'm" : "I'm"}</span>
               <span className="serif block text-5xl text-espresso">{SITE.people[w].name}</span>
               <span className="mt-3 block text-sm text-chocolate/70">{busy === w ? 'One moment…' : w === 'ahmed' ? 'Open my anniversary gift' : 'See how Ahmed is getting on'}</span>
