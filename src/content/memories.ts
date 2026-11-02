@@ -2,7 +2,7 @@
 // MEMORY LANE. A chronological timeline you edit by hand.
 //   - Put photos in /public/memories/ and set `photo: 'memories/first-date.jpg'`.
 //   - Entries marked `placeholder: true` show a "fill me in" badge.
-// Only the wedding date and today come from your brief; everything else is a placeholder.
+// Years for the 2025/2026 entries were inferred from the 2 Nov 2025 wedding date: correct them if needed.
 // ─────────────────────────────────────────────────────────────
 import { SITE } from './site'
 
@@ -15,11 +15,11 @@ export interface Memory {
 }
 
 export const MEMORIES: Memory[] = [
-  { date: '[[ADD DATE]]', title: 'How we met', note: '[[ADD: where, when, what you remember thinking]]', placeholder: true },
-  { date: '[[ADD DATE]]', title: 'Our first date', note: '[[ADD: the place, the nerves, what happened]]', placeholder: true },
-  { date: '[[ADD DATE]]', title: 'The moment I knew', note: '[[ADD: the moment you knew he was the one]]', placeholder: true },
-  { date: '2 November 2025', title: 'The day we got married', note: 'The day we promised each other everything. [[ADD: one detail you will never forget, and a photo]]', placeholder: true },
-  { date: '[[ADD DATE]]', title: 'Our first trip as a married couple', note: '[[ADD: where you went and what made it special]]', placeholder: true },
-  { date: '[[ADD DATE]]', title: `${SITE.petName} joins the family`, note: '[[ADD: the day our cat arrived and took over]]', placeholder: true },
+  { date: '14 October 2025', title: 'We met on Muzz', note: 'Two strangers, one app, and the start of everything.' },
+  { date: '17 October 2025', title: 'Our first date at Al Mamzar Beach', note: 'We had pizza by the sea and ended up staying together for eight hours. Neither of us wanted it to end.' },
+  { date: 'From the very first day', title: `${SITE.petName} was there`, note: `${SITE.petName} was Laviza's long before Ahmed came along, and she has been part of us since day one.` },
+  { date: '25 October 2025', title: 'We decided to get married', note: 'Eleven days after we met, we knew.' },
+  { date: '2 November 2025', title: 'The day we got married', note: 'One week later, we made it official.' },
+  { date: '14 February 2026', title: 'Our first Umrah together', note: 'Our first journey as husband and wife, and a trip of the heart.' },
   { date: '2 November 2026', title: 'Our first anniversary', note: 'One year married, and this little website. Today you are reading it.' },
 ]
