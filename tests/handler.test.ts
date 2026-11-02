@@ -12,6 +12,7 @@ const deps = (over: Partial<Deps['env']> = {}): Deps => ({
   rpc: (fn, args) => dbRpc(db, fn, args),
   env: { APP_PASSWORD: 'dev-password', SESSION_SECRET: SECRET, ...over },
   now: () => clock,
+  wrongGuessDelayMs: 0,
 })
 
 async function call(body: unknown, token?: string, env: Partial<Deps['env']> = {}, ip = '1.2.3.4') {
@@ -44,25 +45,20 @@ describe('password gate (server-side)', () => {
   it('rejects a wrong password with a helpful remaining-attempts count and no token', async () => {
     const r = await call({ action: 'login', password: 'Biscuit' })
     expect(r.status).toBe(401)
-    expect(r.json).toMatchObject({ error: 'wrong_password', attemptsLeft: 4 })
+    expect(r.json).toMatchObject({ error: 'wrong_password' })
     expect(r.json.token).toBeUndefined()
   })
   it('supports several accepted passwords via comma-separated secret', async () => {
     expect((await call({ action: 'login', password: 'second' }, undefined, { APP_PASSWORD: 'first, second' })).status).toBe(200)
   })
-  it('rate-limits after 5 failed attempts from one address, even for the right password; other addresses unaffected', async () => {
-    for (let i = 0; i < 5; i++) expect((await call({ action: 'login', password: 'nope' })).status).toBe(401)
-    const locked = await call({ action: 'login', password: 'dev-password' })
-    expect(locked.status).toBe(429)
-    expect(locked.json.retryAfter).toBeGreaterThan(0)
-    expect((await call({ action: 'login', password: 'dev-password' }, undefined, {}, '9.9.9.9')).status).toBe(200)
+  it('never locks anyone out: the right password works after many wrong guesses', async () => {
+    for (let i = 0; i < 15; i++) expect((await call({ action: 'login', password: 'nope' })).status).toBe(401)
+    expect((await call({ action: 'login', password: 'dev-password' })).status).toBe(200)
   })
-  it('never stores raw IP addresses', async () => {
-    await call({ action: 'login', password: 'nope' }, undefined, {}, '203.0.113.7')
-    const rows = (await db.query<{ ip_hash: string }>('select ip_hash from login_attempts')).rows
-    expect(rows).toHaveLength(1)
-    expect(rows[0].ip_hash).not.toContain('203.0.113.7')
-    expect(rows[0].ip_hash).toMatch(/^[0-9a-f]{64}$/)
+  it('wrong guesses are slowed by a short pause', async () => {
+    const t0 = Date.now()
+    await handle(new Request('https://x.test/', { method: 'POST', body: JSON.stringify({ action: 'login', password: 'x' }) }), { ...deps(), wrongGuessDelayMs: 150 })
+    expect(Date.now() - t0).toBeGreaterThanOrEqual(140)
   })
   it('refuses to run unconfigured (no secret or password)', async () => {
     expect((await call({ action: 'login', password: 'x' }, undefined, { SESSION_SECRET: undefined })).status).toBe(500)

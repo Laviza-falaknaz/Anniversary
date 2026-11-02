@@ -7,7 +7,7 @@ A romantic, interactive site for Laviza and Ahmed (2 November 2026). Letters unl
 ## How it works (and what it does not do)
 
 - The browser **never touches the database**. All tables have Row Level Security on with *no policies*, and every `app_*` SQL function is executable only by the service role. The only door is the `anniv` Edge Function.
-- The password lives only in the Edge Function secret `APP_PASSWORD`. It is checked server-side (constant-time, case-insensitive, rate-limited: 5 wrong guesses / 10 min per address). A correct guess returns a signed, 24-hour session token.
+- The password lives only in the Edge Function secret `APP_PASSWORD`. It is checked server-side (constant-time, case-insensitive, never locks anyone out: the right password always works, and wrong guesses just pause 1 s). A correct guess returns a signed, 24-hour session token.
 - After the password, each person picks **Laviza** or **Ahmed**; the server puts that in the signed token and ignores any `who` sent in a request. This is **self-reported**: one shared password cannot prove who is typing.
 - Letter text is stored in the database and released by the **database clock** only once `unlock_at` has passed. The text is not in the JavaScript bundle. Opening or reacting to a locked letter is refused by SQL.
 - Activity timestamps are server-generated. Writes are idempotent (unique keys / client request ids).

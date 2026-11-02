@@ -1,6 +1,6 @@
 // Request handling for the `anniv` Edge Function. Pure with respect to its
 // dependencies (database RPC, env, clock) so it runs unchanged in Deno and in tests.
-import { hmacHex, safeEqual, signToken, verifyToken, type Claims } from './jwt.ts'
+import { safeEqual, signToken, verifyToken, type Claims } from './jwt.ts'
 
 export interface Deps {
   /** Calls a Postgres function through the service role. */
@@ -12,6 +12,8 @@ export interface Deps {
     ALLOWED_ORIGIN?: string
   }
   now: () => number
+  /** Pause after a wrong password (ms). Default 1000. */
+  wrongGuessDelayMs?: number
 }
 
 class HttpError extends Error {
@@ -81,11 +83,6 @@ function int(v: unknown, min: number, max: number): number {
   return v
 }
 
-function clientIp(req: Request): string {
-  const fwd = req.headers.get('cf-connecting-ip') || req.headers.get('x-forwarded-for') || ''
-  return fwd.split(',')[0].trim() || 'unknown'
-}
-
 function ttlSeconds(env: Deps['env']): number {
   const h = Number(env.SESSION_TTL_HOURS)
   return Math.round((Number.isFinite(h) && h > 0 && h <= 72 ? h : 24) * 3600)
@@ -115,16 +112,15 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 
     // ───── login: the only unauthenticated action ─────
     if (action === 'login') {
-      const ipHash = await hmacHex(secret, clientIp(req))
-      const status = (await deps.rpc('app_login_status', { p_ip_hash: ipHash })) as {
-        locked: boolean; retry_after: number; attempts_left: number
-      }
-      if (status.locked) throw new HttpError(429, 'rate_limited', { retryAfter: status.retry_after })
+      // No lockout: the correct password always works. Wrong guesses only cost a short delay,
+      // which slows brute-forcing without ever locking a real user out.
       const given = str(body.password, 200).trim().toLowerCase()
       let ok = false
       for (const p of passwords) ok = (await safeEqual(given, p.toLowerCase())) || ok
-      await deps.rpc('app_login_record', { p_ip_hash: ipHash, p_ok: ok })
-      if (!ok) throw new HttpError(401, 'wrong_password', { attemptsLeft: Math.max(0, status.attempts_left - 1) })
+      if (!ok) {
+        await new Promise((r) => setTimeout(r, deps.wrongGuessDelayMs ?? 1000))
+        throw new HttpError(401, 'wrong_password')
+      }
       return json(await issue(deps, undefined), 200, env)
     }
 
